@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="page.title">Промінь — застосунок</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#08080a">
+  <link rel="apple-touch-icon" href="icons/icon-maskable-512.png">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+</head>
+<body>
+
+  <!-- Фон: промені світла -->
+  <div class="app-bg" aria-hidden="true">
+    <div class="rays"></div>
+  </div>
+
+  <!-- Шапка застосунку -->
+  <header class="app-header">
+    <a href="index.html" class="logo" data-i18n="brand">Промінь</a>
+    <div class="app-header-actions">
+           <button type="button" class="btn btn-ghost btn-small install-button" id="install" hidden>
+        <svg class="install-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/>
+        </svg>
+        <span class="install-text" data-i18n="app.install">Встановити</span>
+      </button>
+      <div class="lang" role="group" data-i18n-label="language" aria-label="Мова">
+        <button type="button" class="lang-option" data-lang="uk">UA</button>
+        <button type="button" class="lang-option" data-lang="en">EN</button>
+      </div>
+      <button type="button" class="icon-button" id="settings-open" data-i18n-label="settings.open" aria-label="Налаштування">⚙</button>
+    </div>
+  </header>
+
+  <main class="app">
+
+    <!-- 1. Таймер -->
+    <section class="panel timer-panel">
+      <h1 class="visually-hidden" data-i18n="timer.heading">Таймер фокусу</h1>
+
+      <div class="modes">
+        <button type="button" class="mode is-active" data-mode="focus" data-i18n="mode.focus">Фокус</button>
+        <button type="button" class="mode" data-mode="short" data-i18n="mode.short">Перерва</button>
+        <button type="button" class="mode" data-mode="long" data-i18n="mode.long">Довга перерва</button>
+      </div>
+
+      <div class="timer">
+        <svg class="timer-ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="timer-track" cx="60" cy="60" r="54"></circle>
+          <circle class="timer-progress" cx="60" cy="60" r="54" pathLength="100"></circle>
+        </svg>
+        <p class="timer-time">25:00</p>
+      </div>
+
+      <p class="current-task" hidden>
+        <span data-i18n="timer.now">Зараз:</span>
+        <strong class="current-task-title"></strong>
+      </p>
+
+      <div class="timer-buttons">
+        <button type="button" class="btn btn-primary" id="timer-start">Старт</button>
+        <button type="button" class="btn btn-ghost" id="timer-reset" data-i18n="timer.reset">Скинути</button>
+        <button type="button" class="btn btn-ghost" id="timer-skip" data-i18n="timer.skip">Пропустити</button>
+      </div>
+
+      <p class="session-count">Сесія 1 з 4</p>
+    </section>
+
+    <!-- 2. Три головні справи -->
+    <section class="panel tasks-panel">
+      <h2 class="panel-title" data-i18n="tasks.title">Три головні справи</h2>
+
+      <form class="task-form" id="task-form">
+        <input type="text" name="title" placeholder="Що важливе сьогодні?" maxlength="80" required>
+        <button type="submit" class="btn btn-primary btn-small" data-i18n="tasks.add">Додати</button>
+      </form>
+
+      <ul class="task-list" id="task-list"></ul>
+
+      <template id="task-template">
+        <li class="task">
+          <button type="button" class="task-check" aria-label="Позначити виконаною"></button>
+          <button type="button" class="task-title"></button>
+          <span class="task-sessions"></span>
+          <button type="button" class="task-delete" aria-label="Видалити">×</button>
+        </li>
+      </template>
+
+      <p class="panel-hint">Натисни на задачу, щоб працювати над нею.</p>
+    </section>
+
+    <!-- 3. Статистика -->
+    <section class="panel stats-panel">
+      <h2 class="panel-title" data-i18n="stats.title">Статистика</h2>
+
+      <div class="stats">
+        <div class="stat">
+          <p class="stat-value" id="stat-minutes">0</p>
+          <p class="stat-label" data-i18n="stats.minutes">хв фокусу сьогодні</p>
+        </div>
+        <div class="stat">
+          <p class="stat-value" id="stat-sessions">0</p>
+          <p class="stat-label" id="stat-sessions-label">сесій сьогодні</p>
+        </div>
+        <div class="stat">
+          <p class="stat-value" id="stat-streak">0</p>
+          <p class="stat-label" id="stat-streak-label">днів поспіль</p>
+        </div>
+      </div>
+
+      <div class="week" id="week" data-i18n-label="stats.week" aria-label="Хвилини фокусу за цей тиждень"></div>
+    </section>
+
+  </main>
+
+  <!-- Налаштування -->
+  <dialog class="settings" id="settings" aria-labelledby="settings-title">
+    <form method="dialog" class="settings-form" id="settings-form">
+      <h2 class="settings-title" id="settings-title" data-i18n="settings.title">Налаштування</h2>
+
+      <div class="settings-grid">
+        <label class="field">
+          <span data-i18n="settings.focus">Фокус, хв</span>
+          <input type="number" name="focus" min="1" max="90" required>
+        </label>
+        <label class="field">
+          <span data-i18n="settings.short">Перерва, хв</span>
+          <input type="number" name="short" min="1" max="30" required>
+        </label>
+        <label class="field">
+          <span data-i18n="settings.long">Довга перерва, хв</span>
+          <input type="number" name="long" min="1" max="60" required>
+        </label>
+        <label class="field">
+          <span data-i18n="settings.longEvery">Сесій до довгої перерви</span>
+          <input type="number" name="longEvery" min="2" max="8" required>
+        </label>
+      </div>
+
+      <label class="toggle">
+        <input type="checkbox" name="sound">
+            <span data-i18n="settings.sound">Звук і вібрація наприкінці сесії</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" name="autoStart">
+        <span data-i18n="settings.autoStart">Автоматично запускати наступний режим</span>
+      </label>
+            <label class="toggle">
+        <input type="checkbox" name="keepAwake">
+        <span data-i18n="settings.keepAwake">Не гасити екран, поки йде таймер</span>
+      </label>
+
+      <div class="settings-actions">
+        <button type="button" class="btn btn-ghost btn-small" id="sound-test" data-i18n="settings.soundTest">Перевірити звук</button>
+        <div class="settings-buttons">
+          <button type="submit" value="cancel" class="btn btn-ghost btn-small" formnovalidate data-i18n="settings.cancel">Скасувати</button>
+          <button type="submit" value="save" class="btn btn-primary btn-small" data-i18n="settings.save">Зберегти</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/app/main.js"></script>
+</body>
+</html>

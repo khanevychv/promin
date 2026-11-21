@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Сяйво: біле ядро, що розсіюється в теплий колір світла -->
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.16" stop-color="#ffffff"/>
+      <stop offset="0.32" stop-color="#ffeccd" stop-opacity="0.85"/>
+      <stop offset="0.62" stop-color="#ffeccd" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffeccd" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Промінь: яскравий у центрі, зникає на кінцях -->
+    <radialGradient id="ray">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#ffeccd" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="#08080a"/>
+  <circle cx="256" cy="256" r="180" fill="url(#glow)"/>
+  <ellipse cx="256" cy="256" rx="200" ry="7" fill="url(#ray)"/>
+  <ellipse cx="256" cy="256" rx="7" ry="200" fill="url(#ray)"/>
+</svg>
