@@ -74,9 +74,21 @@ function schedule(delay) {
   timer = setTimeout(syncNow, delay);
 }
 
-const check = ({ error }) => {
-  if (error) throw error;
+const check = ({ error, status }) => {
+  if (error) throw Object.assign(new Error(error.message), { code: error.code, status });
 };
+
+// Відповіді, після яких варто перевірити, чи акаунт ще існує (видалили на іншому пристрої,
+// сесію відкликали): 23503 — рядок посилається на неіснуючого користувача, 42501 — немає прав
+const AUTH_CODES = new Set(['23503', '42501', 'PGRST301', 'PGRST302', 'PGRST303']);
+
+async function accountGone(client) {
+  const { data: session } = await client.auth.getSession();
+  if (!session.session) return true;
+  const { data, error } = await client.auth.getUser(); // питаємо сервер напряму
+  if (data?.user) return false;
+  return [401, 403, 404].includes(error?.status) || ['user_not_found', 'session_not_found', 'bad_jwt'].includes(error?.code);
+}
 
 async function push(client) {
   const sent = structuredClone(outbox);
@@ -138,15 +150,23 @@ export async function syncNow() {
 
   syncing = true;
   emit();
+  let client = null;
   try {
-    const client = await loadClient();
+    client = await loadClient();
     await push(client);
     await pull(client);
     cloud.lastSync = Date.now();
     write(CLOUD_KEY, cloud);
     failed = false;
     failures = 0;
-  } catch {
+  } catch (error) {
+    const authProblem = client && (error.status === 401 || error.status === 403 || AUTH_CODES.has(error.code));
+    if (authProblem && await accountGone(client).catch(() => false)) {
+      await signOut();
+      clearLocal(); // акаунта більше немає: цей пристрій стає гостем
+      again = false;
+      return;
+    }
     failed = navigator.onLine; // без мережі це не помилка, а очікування
     if (failed) {
       schedule(RETRY[Math.min(failures, RETRY.length - 1)]);
@@ -207,6 +227,10 @@ function clearLocal() {
   outbox = core.emptyOutbox();
   write(CLOUD_KEY, null);
   write(OUTBOX_KEY, null);
+  // Сесію Supabase прибираємо й самі: без мережі бібліотеки може не бути під рукою
+  Object.keys(localStorage)
+    .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+    .forEach((key) => localStorage.removeItem(key));
   failed = false;
   resetAccountData();
   emit();

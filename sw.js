@@ -1,7 +1,7 @@
 // =========================================
 // Service worker: застосунок працює без інтернету
 // =========================================
-const CACHE = 'promin-v2'; // змінив список файлів? Збільш номер: promin-v3
+const CACHE = 'promin-v3'; // змінив список файлів? Збільш номер: promin-v4
 
 // Усе, без чого застосунок не відкриється
 const APP_FILES = [
@@ -20,6 +20,11 @@ const APP_FILES = [
   'js/app/settings.js',
   'js/app/pwa.js',
   'js/app/wakelock.js',
+  'js/app/config.js',
+  'js/app/cloud.js',
+  'js/app/sync.js',
+  'js/app/sync-core.js',
+  'js/app/account.js',
   'icons/icon.svg',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
@@ -51,8 +56,11 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(networkFirst(request));
   } else if (url.hostname.endsWith('fonts.googleapis.com') || url.hostname.endsWith('fonts.gstatic.com')) {
     event.respondWith(cacheFirst(request));
+  } else if (url.hostname === 'cdn.jsdelivr.net') {
+    // Бібліотека Supabase з точною версією в адресі ніколи не змінюється
+    event.respondWith(cacheFirst(request));
   }
-  // Решту запитів не чіпаємо: браузер обробить їх сам
+  // Решту запитів (зокрема до бази Supabase) не чіпаємо: браузер обробить їх сам
 });
 
 // 4. Клік по сповіщенню: повертаємо на екран вікно застосунку

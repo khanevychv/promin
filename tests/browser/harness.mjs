@@ -47,15 +47,35 @@ export async function openDevice({ width = 1280, height = 860, mobile = false } 
     } catch {}
   }
   if (!wsUrl) throw new Error('Edge DevTools not reachable')
+  const sockets = []
+  const device = await connectPage(wsUrl, { width, height, mobile }, sockets)
+  // Another tab in the same browser profile (shares localStorage and the service worker)
+  device.newTab = async () => {
+    const target = await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: 'PUT' }).then((r) => r.json())
+    return connectPage(target.webSocketDebuggerUrl, { width, height, mobile }, sockets)
+  }
+  device.close = async () => {
+    sockets.forEach((ws) => ws.close())
+    try { execSync(`taskkill /PID ${edge.pid} /T /F`, { stdio: 'ignore' }) } catch {}
+    await sleep(300)
+    await rm(profile, { recursive: true, force: true }).catch(() => {})
+  }
+  return device
+}
+
+async function connectPage(wsUrl, { width, height, mobile }, sockets) {
   const ws = new WebSocket(wsUrl)
+  sockets.push(ws)
   await new Promise((r) => ws.addEventListener('open', r))
   let id = 0
   const pending = new Map()
   const errors = []
+  const requests = [] // every URL the page asked for (blocked ones too)
   ws.addEventListener('message', (event) => {
     const msg = JSON.parse(event.data)
     if (msg.id && pending.has(msg.id)) { pending.get(msg.id)(msg); pending.delete(msg.id) }
     if (msg.method === 'Runtime.exceptionThrown') errors.push(msg.params.exceptionDetails.exception?.description || msg.params.exceptionDetails.text)
+    if (msg.method === 'Network.requestWillBeSent') requests.push(msg.params.request.url)
   })
   const send = (method, params = {}) => new Promise((ok) => { const n = ++id; pending.set(n, ok); ws.send(JSON.stringify({ id: n, method, params })) })
   await send('Page.enable')
@@ -65,9 +85,11 @@ export async function openDevice({ width = 1280, height = 860, mobile = false } 
 
   const device = {
     errors,
+    requests,
     send,
     async goto(url, wait = 1500) { await send('Page.navigate', { url }); await sleep(wait) },
-    async reload(wait = 1500) { await send('Page.reload', { ignoreCache: true }); await sleep(wait) },
+    // A normal reload: a hard one (ignoreCache) would bypass the service worker
+    async reload(wait = 1500) { await send('Page.reload', {}); await sleep(wait) },
     // Runs an expression (or async IIFE) in the page and returns its JSON value; page exceptions are rethrown.
     async eval(expression) {
       const res = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })
@@ -87,16 +109,11 @@ export async function openDevice({ width = 1280, height = 860, mobile = false } 
     },
     async blockUrls(urls) { await send('Network.setBlockedURLs', { urls }) },
     async resize(w, h, isMobile = w < 600) { await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: isMobile }) },
+    async clearHttpCache() { await send('Network.clearBrowserCache') },
     async screenshot(path) {
       const { result } = await send('Page.captureScreenshot', { format: 'png' })
       const { writeFile } = await import('node:fs/promises')
       await writeFile(path, Buffer.from(result.data, 'base64'))
-    },
-    async close() {
-      ws.close()
-      try { execSync(`taskkill /PID ${edge.pid} /T /F`, { stdio: 'ignore' }) } catch {}
-      await sleep(300)
-      await rm(profile, { recursive: true, force: true }).catch(() => {})
     },
   }
   return device
