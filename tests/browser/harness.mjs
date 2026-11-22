@@ -77,7 +77,7 @@ export async function openDevice({ width = 1280, height = 860, mobile = false } 
     async waitFor(expression, timeout = 10_000) {
       const end = Date.now() + timeout
       while (Date.now() < end) {
-        if (await device.eval(`Boolean(${expression})`).catch(() => false)) return true
+        if (await device.eval(`(async () => Boolean(await (${expression})))()`).catch(() => false)) return true
         await sleep(150)
       }
       throw new Error(`timed out waiting for: ${expression}`)
