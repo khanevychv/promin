@@ -170,6 +170,45 @@ test('an account deleted on another device signs this one out locally', async ()
   }
 })
 
+test('if reading the settings fails right after sign-in, the new device does not overwrite them', async () => {
+  const email = newEmail()
+  const first = await signedInDevice(email)
+  const second = await openDevice()
+  try {
+    await first.eval(`(async () => {
+      document.querySelector('#settings-open').click();
+      document.querySelector('#settings-form').elements.focus.value = 50;
+      document.querySelector('button[value=save]').click();
+      await new Promise((r) => setTimeout(r, 300));
+      return 'ok';
+    })()`)
+    await first.waitFor(inPage(`const s = sync.getSyncStatus(); return s.state === 'synced' && s.pending === 0;`), 15_000)
+
+    await second.goto(`${server.url}/app.html`, 300)
+    await second.eval(`localStorage.clear(); localStorage.setItem('lang', 'en'); 'ok'`)
+    await second.reload(2000)
+    await second.blockUrls(['*rest/v1/settings*'])
+    const result = await second.eval(inPage(`
+      const r = await cloud.signIn(${JSON.stringify(email)}, '${PASSWORD}');
+      if (r.error) return r;
+      await sync.afterSignIn();
+      return { ok: true };`))
+    assert.deepEqual(result, { ok: true })
+    await second.blockUrls([])
+    await second.eval(`document.dispatchEvent(new Event('visibilitychange')); 'ok'`)
+    await second.waitFor(inPage(`const s = sync.getSyncStatus(); return s.state === 'synced' && s.pending === 0;`), 20_000)
+    await second.waitFor(`JSON.parse(localStorage.getItem('promin-app')).settings.focus === 50`, 10_000)
+    const row = await first.eval(inPage(`
+      const client = await cloud.loadClient();
+      const { data } = await client.from('settings').select('data').single();
+      return data;`))
+    assert.equal(row.data.focus, 50)
+  } finally {
+    await second.close()
+    await first.close()
+  }
+})
+
 test('two tabs on one device converge without duplicates on the server', async () => {
   const one = await signedInDevice(newEmail())
   try {

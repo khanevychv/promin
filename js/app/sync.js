@@ -204,15 +204,17 @@ export async function afterSignIn() {
   const user = await getUser();
   if (!user) return;
   const client = await loadClient();
-  const { data: row } = await client.from('settings').select('data, updated_at').maybeSingle();
+  const { data: row, error } = await client.from('settings').select('data, updated_at').maybeSingle();
   const state = getState();
+  // Не змогли прочитати налаштування з акаунта — відправляємо свої, лише якщо їх тут справді змінювали
+  const settingsFromHere = error ? state.settingsChangedAt > 0 : core.pickSettings(state.settingsChangedAt, row) === 'local';
 
   cloud = { userId: user.id, email: user.email, cursor: null, lastSync: null };
   write(CLOUD_KEY, cloud);
   outbox = {
     tasks: Object.fromEntries(state.tasks.map((task) => [task.id, 'upsert'])),
     sessions: state.sessions.map((session) => session.id),
-    settings: core.pickSettings(state.settingsChangedAt, row) === 'local',
+    settings: settingsFromHere,
   };
   write(OUTBOX_KEY, outbox);
   snapshot = pick(state);

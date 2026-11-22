@@ -1,6 +1,8 @@
 // =========================================
 // Сховище: усі дані застосунку в одному місці
 // =========================================
+import { createUid } from './utils.js';
+
 const STORAGE_KEY = 'promin-app';
 
 const defaultState = {
@@ -37,7 +39,7 @@ function load() {
       ...saved,
       settings: { ...defaultState.settings, ...saved.settings },
       // Старі сесії (до синхронізації) не мали id — даємо його, щоб їх можна було синхронізувати
-      sessions: (saved.sessions ?? []).map((session) => (session.id ? session : { ...session, id: crypto.randomUUID() })),
+      sessions: (saved.sessions ?? []).map((session) => (session.id ? session : { ...session, id: createUid() })),
     };
   } catch {
     return structuredClone(defaultState);

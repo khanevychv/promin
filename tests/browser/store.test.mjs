@@ -98,6 +98,30 @@ test('setState passes meta to listeners', async () => {
   assert.deepEqual(meta, { fromSync: true })
 })
 
+test('without crypto.randomUUID (plain http on a home network) old sessions load and new ones get ids', async () => {
+  const today = todayKey()
+  const page = await openDevice()
+  try {
+    await page.send('Page.addScriptToEvaluateOnNewDocument', { source: 'delete Crypto.prototype.randomUUID;' })
+    await page.goto(`${server.url}/app.html`, 300)
+    await page.eval(`localStorage.clear(); localStorage.setItem('lang', 'en'); localStorage.setItem('promin-app', ${JSON.stringify(JSON.stringify({
+      tasks: [{ id: 't1', title: 'Now', done: false, date: today }],
+      sessions: [{ date: today, minutes: 25, taskId: 't1' }],
+      currentTaskId: 't1',
+      timer: { running: true, endTime: Date.now() + 1500, remaining: null },
+    }))}); 'ok'`)
+    await page.reload(1500)
+    assert.equal(await page.eval(`typeof crypto.randomUUID`), 'undefined')
+    await page.waitFor(`JSON.parse(localStorage.getItem('promin-app')).sessions.length === 2`, 8000)
+    const sessions = await page.eval(`JSON.parse(localStorage.getItem('promin-app')).sessions`)
+    assert.ok(sessions.every((s) => typeof s.id === 'string' && s.id.length >= 16), JSON.stringify(sessions))
+    assert.notEqual(sessions[0].id, sessions[1].id)
+    assert.deepEqual(page.errors, [])
+  } finally {
+    await page.close()
+  }
+})
+
 test('no page errors', () => {
   assert.deepEqual(device.errors, [])
 })

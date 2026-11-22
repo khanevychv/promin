@@ -16,3 +16,10 @@ export function todayKey(date = new Date()) {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+// Унікальний id. crypto.randomUUID є лише на https і localhost, тож на http
+// (наприклад, телефон у домашній мережі) беремо 16 випадкових байтів
+export function createUid() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return [...crypto.getRandomValues(new Uint8Array(16))].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}

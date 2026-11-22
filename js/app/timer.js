@@ -2,7 +2,7 @@
 // Таймер: фокус → перерва → фокус…
 // =========================================
 import { getState, setState, subscribe } from './store.js';
-import { formatTime, todayKey } from './utils.js';
+import { formatTime, todayKey, createUid } from './utils.js';
 import { prepareAlerts, playChime, notify } from './alerts.js';
 import { t } from './i18n.js';
 
@@ -70,7 +70,7 @@ function finishPhase(completed) {
       // Скільки сесій у задачі, рахуємо з цього списку (за taskId), а не окремим лічильником
       changes.sessions = [
         ...state.sessions,
-        { id: crypto.randomUUID(), date: todayKey(), minutes: state.settings.focus, taskId: state.currentTaskId },
+        { id: createUid(), date: todayKey(), minutes: state.settings.focus, taskId: state.currentTaskId },
       ];
       changes.completedInCycle = state.completedInCycle + 1;
     }
