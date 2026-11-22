@@ -67,13 +67,11 @@ function finishPhase(completed) {
 
   if (state.mode === 'focus') {
     if (completed) {
+      // Скільки сесій у задачі, рахуємо з цього списку (за taskId), а не окремим лічильником
       changes.sessions = [
         ...state.sessions,
-        { date: todayKey(), minutes: state.settings.focus, taskId: state.currentTaskId },
+        { id: crypto.randomUUID(), date: todayKey(), minutes: state.settings.focus, taskId: state.currentTaskId },
       ];
-      changes.tasks = state.tasks.map((task) =>
-        task.id === state.currentTaskId ? { ...task, sessions: task.sessions + 1 } : task
-      );
       changes.completedInCycle = state.completedInCycle + 1;
     }
     const done = changes.completedInCycle ?? state.completedInCycle;

@@ -49,6 +49,7 @@ export function initSettings() {
     const state = getState();
     setState({
       settings: { ...state.settings, ...readForm() },
+      settingsChangedAt: Date.now(), // щоб при вході в акаунт знати, чиї налаштування новіші
       // Якщо таймер не йде, режим почнеться з новою тривалістю
       timer: state.timer.running ? state.timer : { running: false, endTime: null, remaining: null },
     });

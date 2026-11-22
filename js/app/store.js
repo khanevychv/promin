@@ -15,8 +15,9 @@ const defaultState = {
     autoStart: false, // самостійно запускати наступний режим
     keepAwake: true, // не гасити екран, поки йде таймер
   },
+  settingsChangedAt: 0, // коли людина востаннє зберегла налаштування (мс) — для злиття з акаунтом
   tasks: [],
-  sessions: [],
+  sessions: [], // { id, date, minutes, taskId }
   currentTaskId: null,
   completedInCycle: 0, // скільки сесій фокусу вже пройдено в цьому колі
   timer: { running: false, endTime: null, remaining: null },
@@ -35,6 +36,8 @@ function load() {
       ...defaultState,
       ...saved,
       settings: { ...defaultState.settings, ...saved.settings },
+      // Старі сесії (до синхронізації) не мали id — даємо його, щоб їх можна було синхронізувати
+      sessions: (saved.sessions ?? []).map((session) => (session.id ? session : { ...session, id: crypto.randomUUID() })),
     };
   } catch {
     return structuredClone(defaultState);
@@ -50,11 +53,17 @@ export function getState() {
   return state;
 }
 
-// Змінити стан: зберегти і повідомити всіх, хто підписався
-export function setState(changes) {
+// Змінити стан: зберегти і повідомити всіх, хто підписався.
+// meta — пояснення для слухачів, наприклад { fromSync: true }, коли зміни прийшли з акаунта
+export function setState(changes, meta = {}) {
   state = { ...state, ...changes };
   save();
-  listeners.forEach((listener) => listener(state));
+  listeners.forEach((listener) => listener(state, meta));
+}
+
+// Прибрати з пристрою дані акаунта (після виходу): усе стандартне, лише мова лишається
+export function resetAccountData() {
+  setState({ ...structuredClone(defaultState), lang: state.lang }, { reset: true });
 }
 
 // Підписатися на зміни стану

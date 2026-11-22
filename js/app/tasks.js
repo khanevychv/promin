@@ -33,7 +33,7 @@ function addTask(title) {
   const state = getState();
   if (todayTasks(state).length >= MAX_TASKS) return;
 
-  const task = { id: createId(), title, done: false, sessions: 0, date: todayKey() };
+  const task = { id: createId(), title, done: false, date: todayKey() };
   setState({
     tasks: [...state.tasks, task],
     currentTaskId: state.currentTaskId ?? task.id, // перша задача одразу стає поточною
@@ -70,13 +70,15 @@ function selectTask(id) {
 
 // --- Малюємо ---
 let lastTasks = null;
+let lastSessions = null;
 let lastCurrentId;
 let lastLang = null;
 
 function render(state) {
-  // Ні задачі, ні мова не змінилися — нічого не перемальовуємо
-  if (state.tasks === lastTasks && state.currentTaskId === lastCurrentId && state.lang === lastLang) return;
+  // Ні задачі, ні сесії, ні мова не змінилися — нічого не перемальовуємо
+  if (state.tasks === lastTasks && state.sessions === lastSessions && state.currentTaskId === lastCurrentId && state.lang === lastLang) return;
   lastTasks = state.tasks;
+  lastSessions = state.sessions;
   lastCurrentId = state.currentTaskId;
   lastLang = state.lang;
 
@@ -92,7 +94,8 @@ function render(state) {
 
     item.querySelector('.task-title').textContent = task.title;
     item.querySelector('.task-title').setAttribute('aria-pressed', isCurrent);
-    item.querySelector('.task-sessions').textContent = sessionsLabel(task.sessions);
+    const sessions = state.sessions.filter((session) => session.taskId === task.id).length;
+    item.querySelector('.task-sessions').textContent = sessionsLabel(sessions);
     item.querySelector('.task-check').setAttribute('aria-label', task.done ? t('tasks.uncheck') : t('tasks.check'));
     item.querySelector('.task-delete').setAttribute('aria-label', t('tasks.delete'));
 
