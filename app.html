@@ -24,7 +24,7 @@
 
   <!-- Шапка застосунку -->
   <header class="app-header">
-    <a href="index.html" class="logo" data-i18n="brand">Промінь</a>
+    <a href="index.html" class="logo"><span class="logo-text" data-i18n="brand">Промінь</span></a>
     <div class="app-header-actions">
            <button type="button" class="btn btn-ghost btn-small install-button" id="install" hidden>
         <svg class="install-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -36,6 +36,13 @@
         <button type="button" class="lang-option" data-lang="uk">UA</button>
         <button type="button" class="lang-option" data-lang="en">EN</button>
       </div>
+      <button type="button" class="icon-button account-button" id="account-open" data-state="guest" aria-label="Акаунт: вхід не виконано">
+        <svg class="account-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8.5" r="3.5"/>
+          <path d="M5 19.5c1.2-3.3 3.9-5 7-5s5.8 1.7 7 5"/>
+        </svg>
+        <span class="account-dot" aria-hidden="true"></span>
+      </button>
       <button type="button" class="icon-button" id="settings-open" data-i18n-label="settings.open" aria-label="Налаштування">⚙</button>
     </div>
   </header>
@@ -166,6 +173,52 @@
         </div>
       </div>
     </form>
+  </dialog>
+
+  <!-- Акаунт -->
+  <dialog class="settings account" id="account" aria-labelledby="account-title">
+    <div class="settings-form">
+      <h2 class="settings-title" id="account-title" data-i18n="account.title">Акаунт</h2>
+
+      <!-- Без входу: вхід або реєстрація -->
+      <form class="account-auth" id="account-form">
+        <p class="account-lead" data-i18n="account.lead">Увійди, щоб задачі й статистика були на всіх твоїх пристроях.</p>
+        <div class="account-modes" role="group" data-i18n-label="account.modes" aria-label="Вхід або реєстрація">
+          <button type="button" class="account-mode" data-mode="signin" data-i18n="account.signin">Вхід</button>
+          <button type="button" class="account-mode" data-mode="signup" data-i18n="account.signup">Реєстрація</button>
+        </div>
+        <fieldset class="account-fields">
+          <label class="field">
+            <span data-i18n="account.email">Пошта</span>
+            <input type="email" name="email" autocomplete="email" maxlength="254" required>
+          </label>
+          <label class="field">
+            <span data-i18n="account.password">Пароль (від 8 символів)</span>
+            <input type="password" name="password" autocomplete="current-password" minlength="8" maxlength="72" required>
+          </label>
+        </fieldset>
+        <p class="account-message account-form-message" role="alert" hidden></p>
+        <p class="account-note" data-i18n="account.note">Відновити пароль поки не можна, тож запиши його.</p>
+        <div class="settings-actions">
+          <button type="button" class="btn btn-ghost btn-small" data-close data-i18n="account.close">Закрити</button>
+          <button type="submit" class="btn btn-primary btn-small" id="account-submit">Увійти</button>
+        </div>
+      </form>
+
+      <!-- Після входу: хто, стан синхронізації, вихід, видалення -->
+      <div class="account-panel" id="account-panel" hidden>
+        <p class="account-email"></p>
+        <p class="account-status"></p>
+        <p class="account-message account-panel-message" role="alert" hidden></p>
+        <div class="settings-actions">
+          <button type="button" class="btn btn-ghost btn-small account-delete" id="account-delete">Видалити акаунт</button>
+          <div class="settings-buttons">
+            <button type="button" class="btn btn-ghost btn-small" data-close data-i18n="account.close">Закрити</button>
+            <button type="button" class="btn btn-primary btn-small" id="account-signout">Вийти</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </dialog>
 
   <script type="module" src="js/app/main.js"></script>

@@ -600,3 +600,151 @@ a {
     grid-template-columns: 1fr;
   }
 }
+/* =========================================
+   АКАУНТ
+   ========================================= */
+.account-button {
+  position: relative;
+}
+
+.account-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+/* Крапка стану: без входу її не видно */
+.account-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid #121214;
+  border-radius: 50%;
+  background-color: var(--color-text-muted);
+  opacity: 0;
+  transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+.account-button[data-state="synced"] .account-dot,
+.account-button[data-state="syncing"] .account-dot {
+  opacity: 1;
+  background-color: rgb(var(--color-light));
+  box-shadow: 0 0 8px rgba(var(--color-light), 0.7);
+}
+
+.account-button[data-state="syncing"] .account-dot {
+  animation: account-pulse 0.9s ease-in-out infinite alternate;
+}
+
+.account-button[data-state="pending"] .account-dot {
+  opacity: 1;
+}
+
+.account-button[data-state="error"] .account-dot {
+  opacity: 1;
+  background-color: #e5484d;
+}
+
+@keyframes account-pulse {
+  to {
+    opacity: 0.35;
+  }
+}
+
+.account-auth,
+.account-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.account-lead,
+.account-status {
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.account-note {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.account-email {
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Перемикач «Вхід / Реєстрація» — як режими таймера */
+.account-modes {
+  display: flex;
+  justify-self: start;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.account-mode {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.account-mode[aria-pressed="true"] {
+  background-color: rgba(var(--color-light), 0.15);
+  color: rgb(var(--color-light));
+}
+
+.account-fields {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.account-fields:disabled {
+  opacity: 0.5;
+}
+
+.account-message {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background-color: rgba(229, 72, 77, 0.12);
+  font-size: 14px;
+  color: #ff9b9e;
+}
+
+.account-delete.is-confirm {
+  border-color: rgba(229, 72, 77, 0.6);
+  color: #ff9b9e;
+}
+
+/* На вузьких телефонах лишаємо від логотипа тільки сяйво, щоб вмістилися кнопки */
+@media (max-width: 400px) {
+  .logo {
+    gap: 0;
+  }
+
+  .logo-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

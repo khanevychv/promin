@@ -9,6 +9,7 @@ import { initSettings } from './settings.js';
 import { initPwa } from './pwa.js';
 import { initWakeLock } from './wakelock.js';
 import { initSync } from './sync.js';
+import { initAccount } from './account.js';
 
 initI18n(); // мова — першою, щоб усі інші одразу малювали потрібною мовою
 initTimer();
@@ -18,3 +19,4 @@ initSettings();
 initPwa();
 initWakeLock();
 initSync(); // для гостя нічого не робить; після входу синхронізує дані з акаунтом
+initAccount();
